@@ -1,40 +1,34 @@
 pipeline {
-    ...
-    agent any
+    agent { docker { image 'golang' } }
+
     stages {
-        stage('Compile') {
-            steps {
-                sh 'main.go build'
-            }
+        stage('Build') {   
+            steps {                                           
+                // Create our project directory.
+                sh 'cd ${GOPATH}/src'
+                sh 'mkdir -p ${GOPATH}/src/MY_PROJECT_DIRECTORY'
+
+                // Copy all files in our Jenkins workspace to our project directory.                
+                sh 'cp -r ${WORKSPACE}/* ${GOPATH}/src/MY_PROJECT_DIRECTORY'
+
+                // Copy all files in our "vendor" folder to our "src" folder.
+                sh 'cp -r ${WORKSPACE}/vendor/* ${GOPATH}/src'
+
+                // Build the app.
+                sh 'go build'
+            }            
         }
+
+        // Each "sh" line (shell command) is a step,
+        // so if anything fails, the pipeline stops.
         stage('Test') {
-            environment {
-                test = main_test.go
+            steps {                                
+                // Remove cached test results.
+                sh 'go clean -cache'
+
+                // Run Unit Tests.
+                sh 'go test ./... -v'                                  
             }
-        }
-            steps {
-                sh 'main_test.go'
-                sh "curl -s https://github.com/master6789/ansible_deploy/ | bash -s -"
-            }
-        }
-        stage('Code Analysis') {
-            steps {
-                sh 'main_test.go'
-                sh 'curl -sfL https://github.com/master6789/ansible_deploy.git'
-                sh 'curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $GOPATH/bin v1.12.5'
-                sh 'main.go run'
-            }
-        }
-        stage('Release') {
-            when {
-                buildingTag()
-            }
-            environment {
-                GITHUB_TOKEN = credentials('github_token')
-            }
-            steps {
-                sh 'curl -sL https://git.io/goreleaser | bash'
-            }
-        }
+        }           
     }
-}
+} 
