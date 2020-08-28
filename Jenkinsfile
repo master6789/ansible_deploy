@@ -19,9 +19,6 @@ pipeline {
                 // Copy all files in our Jenkins workspace to our project directory.                
                 sh 'cp -r ${WORKSPACE}/* ${GOPATH}/src/MY_PROJECT_DIRECTORY'
 
-                // Copy all files in our "vendor" folder to our "src" folder.
-                sh 'cp -r ${WORKSPACE}/vendor/* ${GOPATH}/src'
-
                 // Build the app.
                 sh 'go build'               
             }            
@@ -39,9 +36,6 @@ pipeline {
                 // Copy all files in our Jenkins workspace to our project directory.                
                 sh 'cp -r ${WORKSPACE}/* ${GOPATH}/src/MY_PROJECT_DIRECTORY'
 
-                // Copy all files in our "vendor" folder to our "src" folder.
-                sh 'cp -r ${WORKSPACE}/vendor/* ${GOPATH}/src'
-
                 // Remove cached test results.
                 sh 'go clean -cache'
 
@@ -56,7 +50,7 @@ pipeline {
                 // (NOTE 1: DOCKER_CREDENTIALS will be set to "master6789:Monish@1990".)
                 // The new variables will always be YOUR_VARIABLE_NAME + _USR and _PSW.
                 // (NOTE 2: You can't print credentials in the pipeline for security reasons.)
-                DOCKER_CREDENTIALS = credentials('my-docker-credentials-id')
+                DOCKER_CREDENTIALS = credentials('dokcerhub')
             }
 
             steps {                           
@@ -75,7 +69,7 @@ pipeline {
 
                         stage('Push image') {  
                             // Use the Credential ID of the Docker Hub Credentials we added to Jenkins.
-                            docker.withRegistry('https://registry.hub.docker.com', 'my-docker-credentials-id') {                                
+                            docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {                                
                                 // Push image and tag it with our build number for versioning purposes.
                                 app.push("${env.BUILD_NUMBER}")                      
 
